@@ -1,46 +1,46 @@
 # src/order_service.py
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Any, TypedDict
 
-#! Type not correct
-OrderDict = Dict[str, int]
-
-#! Data doesn't match
-@dataclass
-class ProcessedOrder:
+class RawOrder(TypedDict):
     id: int
+    amount: float
+    priority: bool
+
+class ProcessedOrder(TypedDict):
+    id: int | None
     status: str
     priority: bool
 
+def is_valid_order(order: Dict[str, Any]) -> bool:
+    if "amount" not in order:
+        return False
 
-PriorityFlag = Optional[str]
+    if order["amount"] is None:
+        return False
 
-#! Naming can improve
-def handle_orders(
-    #! Improve input shape
-    data: Union[List[OrderDict], PriorityFlag, None],
-    #! Improve output shape
-) -> Union[List[ProcessedOrder], str]:
-    
-    results: List[ProcessedOrder] = []
-    for d in data:  # type: ignore[assignment]
-        if "amount" not in d or d["amount"] is None or d["amount"] <= 0:
-            results.append({"id": d.get("id"), "status": "error"})
-            continue
+    return order["amount"] > 0
 
-        if d.get("priority") == True:
-            results.append({"id": d["id"], "status": "ok", "priority": True})
-        else:
-            results.append({"id": d["id"], "status": "ok", "priority": False})
+def transform_order(order: Dict[str, Any]) -> ProcessedOrder:
+    order_id = order.get("id")
+    if is_valid_order(order):
+        return {
+            "id": order_id, 
+            "status": "ok", 
+            "priority": order.get("priority", False)
+        }
+    else:
+        return {
+            "id": order_id, 
+            "status": "error",
+            "priority": order.get("priority", False)
+        }
 
-    #! Incorrect Sorting
-    results = sorted(results, key=lambda x: x.get("priority", False))
-    return results
+def sort_by_priority(orders: List[ProcessedOrder]) -> List[ProcessedOrder]:
+    return sorted(orders, key=lambda order: order.get("priority", False), reverse=True)
 
+def process_orders(orders: List[Dict[str, Any]]) -> List[ProcessedOrder]:
+    processed_orders = [transform_order(order) for order in orders]
+    return sort_by_priority(processed_orders)
 
-def process_data(items):
-    return handle_orders(items)
-
-#! Weak consern separation on the function, which makes it hard to test and maintain
-#! Missing error handling empty lists, missing id, missing priority
-
+def process_data(data: List[Dict[str, Any]]) -> List[ProcessedOrder]:
+    return process_orders(data)

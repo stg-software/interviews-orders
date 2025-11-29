@@ -57,7 +57,7 @@ class TestTransformation:
         assert transform_order(order) == expected
 
     @pytest.mark.parametrize(
-        "order, expected",
+        "order, expected_id",
         [
             ({"id": 1, "amount": None, "priority": True}, 1),
             ({"id": 2, "amount": -1, "priority": True}, 2),
@@ -73,10 +73,10 @@ class TestTransformation:
 
 class TestSorting:
     def test_sort_by_priority(self):
-        orders = [
-            {"id": 1, "amount": 100, "priority": False},
-            {"id": 2, "amount": 10.5, "priority": True},
-            {"id": 3, "amount": 0.01, "priority": False},
+        orders: list[ProcessedOrder] = [
+            {"id": 1, "status": "ok", "priority": False},
+            {"id": 2, "status": "ok", "priority": True},
+            {"id": 3, "status": "ok", "priority": False},
         ]
         sorted_orders = sort_by_priority(orders)
         assert sorted_orders[0]["id"] == 2
@@ -128,4 +128,3 @@ class TestCompatibility:
         assert processed_orders[2]["priority"] == False
         assert processed_orders[2]["status"] == "error"
 
-        

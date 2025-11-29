@@ -12,3 +12,5 @@ def test_error_amount_zero():
     data = [{"id": 2, "amount": 0}]
     out = process_data(data)
     assert out[0]["status"] == "error"
+
+#! more test cases needed
